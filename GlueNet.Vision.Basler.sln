@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GlueNet.Vision.Basler", "GlueNet.Vision.Basler\GlueNet.Vision.Basler.csproj", "{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GlueNet.Vision.Basler.WpfApp", "GlueNet.Vision.Basler.WpfApp\GlueNet.Vision.Basler.WpfApp.csproj", "{FF44800D-0712-4260-855A-BBF06E6B56A1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282} = {62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}.Debug|x64.ActiveCfg = Debug|x64
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}.Debug|x64.Build.0 = Debug|x64
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}.Release|x64.ActiveCfg = Release|x64
+		{62DA1376-2EC6-4FF1-8BE4-5FF1E91B3282}.Release|x64.Build.0 = Release|x64
+		{FF44800D-0712-4260-855A-BBF06E6B56A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF44800D-0712-4260-855A-BBF06E6B56A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF44800D-0712-4260-855A-BBF06E6B56A1}.Debug|x64.ActiveCfg = Debug|x64
+		{FF44800D-0712-4260-855A-BBF06E6B56A1}.Debug|x64.Build.0 = Debug|x64
+		{FF44800D-0712-4260-855A-BBF06E6B56A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF44800D-0712-4260-855A-BBF06E6B56A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF44800D-0712-4260-855A-BBF06E6B56A1}.Release|x64.ActiveCfg = Release|x64
+		{FF44800D-0712-4260-855A-BBF06E6B56A1}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0FEA2BCA-1EE1-4BA4-A8E0-AB34CAB1E4D0}
+	EndGlobalSection
+EndGlobal
