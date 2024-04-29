@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -10,9 +11,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using Basler.Pylon;
 using Emgu.CV.Reg;
 using GlueNet.Vision.Core;
+using Camera = Basler.Pylon.Camera;
 using Color = System.Drawing.Color;
 using ICamera = GlueNet.Vision.Core.ICamera;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
@@ -22,6 +25,8 @@ namespace GlueNet.Vision.Basler
     public class BaslerCamera : ICamera, INotifyPropertyChanged
     {
         private Camera myCamera;
+
+        private PixelDataConverter myConverter = new PixelDataConverter();
 
         private bool myGrabOver = false;
         public CameraInfo CameraInfo { get; }
@@ -44,9 +49,18 @@ namespace GlueNet.Vision.Basler
 
             myCamera.Open();
 
-            myCamera.Parameters[PLCamera.GevHeartbeatTimeout].SetValue(1000);
+            myCamera.Parameters.Load("CameraParameters.pfs", ParameterPath.CameraDevice);
 
-            Console.WriteLine($"Mode : {myCamera.Parameters[PLCamera.AcquisitionMode].GetValue()}");
+            myCamera.Parameters[PLCamera.GevHeartbeatTimeout].SetValue(10000, IntegerValueCorrection.Nearest);
+
+            //myCamera.Parameters[PLCamera.ExposureTimeAbs].SetValue(10000);
+            
+            //myCamera.Parameters[PLCamera.TriggerMode].SetValue("On");
+
+            myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Software);
+
+            Console.WriteLine($"Mode : {myCamera.Parameters[PLCamera.TriggerSource].GetValue()}");
+            Console.WriteLine($"Exp Time : {myCamera.Parameters[PLCamera.ExposureTimeRaw].GetValue()}");
         }
 
         private void OnGrabStopped(object sender, GrabStopEventArgs e)
@@ -59,30 +73,46 @@ namespace GlueNet.Vision.Basler
             myGrabOver = true;
         }
 
-        private void OnImageGrabbed(object sender, ImageGrabbedEventArgs e)
+        private void OnImageGrabbed(Object sender, ImageGrabbedEventArgs e)
         {
-            IGrabResult grabResult = e.GrabResult;
-
-            Bitmap bitmap;
-
-            if (IsMonoData(grabResult))
+            try
             {
-                bitmap = ToBitmap(grabResult, PixelFormat.Format8bppIndexed);
-            }
-            else
-            {
-                bitmap = ToBitmap(grabResult, PixelFormat.Format24bppRgb);
-            }
+                IGrabResult grabResult = e.GrabResult;
 
+                PixelFormat pixelFormat;
 
-            if (myGrabOver)
-            {
-                Application.Current.Dispatcher.Invoke(() =>
+                if (grabResult.IsValid)
                 {
-                    CaptureCompleted?.Invoke(this, new BaslerCaptureCompletedArgs(bitmap));
-                });
+
+                    Bitmap bitmap = new Bitmap(grabResult.Width, grabResult.Height, PixelFormat.Format24bppRgb);
+
+                    BitmapData bmpData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
+
+                    myConverter.OutputPixelFormat = PixelType.BGR8packed;
+                    IntPtr ptrBmp = bmpData.Scan0;
+                    myConverter.Convert(ptrBmp, bmpData.Stride * bitmap.Height, grabResult);
+                    bitmap.UnlockBits(bmpData);
+
+                    if (myGrabOver)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            CaptureCompleted?.Invoke(this, new BaslerCaptureCompletedArgs(bitmap));
+                        });
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.ToString());
+            }
+            finally
+            {
+                // Dispose the grab result if needed for returning it to the grab loop.
+                e.DisposeGrabResultIfClone();
             }
         }
+
 
         public void Dispose()
         {
@@ -108,9 +138,11 @@ namespace GlueNet.Vision.Basler
         {
             try
             {
-                //myCamera.StreamGrabber.Start();
-                myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.Continuous);
-                myCamera.StreamGrabber.Start(GrabStrategy.LatestImages, GrabLoop.ProvidedByUser);
+                //TriggerMode = TriggerModes.Continues;
+                //myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
+                //myCamera.StreamGrabber.Start(GrabStrategy.LatestImages, GrabLoop.ProvidedByStreamGrabber);
+
+                ContinuousShot();
             }
             catch (Exception e)
             {
@@ -134,12 +166,20 @@ namespace GlueNet.Vision.Basler
         {
             try
             {
-                myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
-                myCamera.StreamGrabber.Start(1, GrabStrategy.LatestImages, GrabLoop.ProvidedByUser);
-                //myCamera.ExecuteSoftwareTrigger();
+                //TriggerMode = TriggerModes.SoftTrigger;
+                ////myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
+                //myCamera.StreamGrabber.Start(1, GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
+
+                //if (myCamera.WaitForFrameTriggerReady(5000, TimeoutHandling.ThrowException))
+                //{
+                //    myCamera.ExecuteSoftwareTrigger();
+                //}
+
+                OneShot();
             }
             catch (Exception e)
             {
+                myCamera.StreamGrabber.Stop();
                 Console.WriteLine(e);
             }
         }
@@ -267,20 +307,39 @@ namespace GlueNet.Vision.Basler
 
         public void SetTriggerMode()
         {
-            myCamera.CameraOpened -= Configuration.AcquireContinuous;
-            myCamera.CameraOpened -= Configuration.SoftwareTrigger;
-            myCamera.CameraOpened += Configuration.SoftwareTrigger;
-
             TriggerMode = TriggerModes.SoftTrigger;
         }
 
         public void SetContinuousMode()
         {
-            myCamera.CameraOpened -= Configuration.AcquireContinuous;
-            myCamera.CameraOpened -= Configuration.SoftwareTrigger;
-            myCamera.CameraOpened += Configuration.SoftwareTrigger;
-
             TriggerMode = TriggerModes.Continues;
+        }
+
+        private void OneShot()
+        {
+            try
+            {
+                Configuration.AcquireSingleFrame(myCamera, null);
+                myCamera.StreamGrabber.Start(1, GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.ToString());
+            }
+        }
+
+
+        private void ContinuousShot()
+        {
+            try
+            {
+                Configuration.AcquireContinuous(myCamera, null);
+                myCamera.StreamGrabber.Start(GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.ToString());
+            }
         }
     }
 }

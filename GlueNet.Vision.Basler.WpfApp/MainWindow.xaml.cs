@@ -32,8 +32,8 @@ namespace GlueNet.Vision.Basler.WpfApp
         public BitmapImage BitmapSource2 { get; set; }
         public ICamera Camera1 { get; set; }
         public ICamera Camera2 { get; set; }
-        public bool IsContinuous { get; set; } = true;
-        public bool IsSoftTrigger { get; set; } = false;
+        public bool IsContinuous { get; set; } = false;
+        public bool IsSoftTrigger { get; set; } = true;
         public float Gain { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -104,6 +104,7 @@ namespace GlueNet.Vision.Basler.WpfApp
 
         private void StartPlayOnClick(object sender, RoutedEventArgs e)
         {
+            IsContinuous = true;
             Camera1.StartPlay();
         }
 
@@ -114,6 +115,7 @@ namespace GlueNet.Vision.Basler.WpfApp
 
         private void CaptureOnClick(object sender, RoutedEventArgs e)
         {
+            IsSoftTrigger = true;
             Camera1.SoftTrigger();
         }
 
