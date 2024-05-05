@@ -13,7 +13,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using Basler.Pylon;
-using Emgu.CV.Reg;
 using GlueNet.Vision.Core;
 using Camera = Basler.Pylon.Camera;
 using Color = System.Drawing.Color;
@@ -32,7 +31,6 @@ namespace GlueNet.Vision.Basler
         public CameraInfo CameraInfo { get; }
         public TriggerModes TriggerMode { get; set; }
         public bool IsPlaying { get; set; }
-        public FrameInfo FrameInfo { get; }
 
         public event EventHandler<ICaptureCompletedArgs> CaptureCompleted;
 

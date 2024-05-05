@@ -64,11 +64,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Basler.Pylon.NET.x64.7.4.0.38864\lib\native\Basler.Pylon.dll</HintPath>
     </Reference>
-    <Reference Include="Emgu.CV, Version=4.7.0.5276, Culture=neutral, PublicKeyToken=7281126722ab4438, processorArchitecture=MSIL">
-      <HintPath>..\packages\Emgu.CV.4.7.0.5276\lib\netstandard2.0\Emgu.CV.dll</HintPath>
+    <Reference Include="Emgu.CV.UI, Version=4.1.1.3497, Culture=neutral, PublicKeyToken=7281126722ab4438, processorArchitecture=MSIL">
+      <HintPath>..\..\..\CUSTOM\GlueNet.AiVision.Inventec.LgsVision\packages\EMGU.CV.4.1.1.3497\lib\net35\Emgu.CV.UI.dll</HintPath>
     </Reference>
-    <Reference Include="GlueNet.Vision.Core, Version=1.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\GlueNet.Vision.Core.1.5.0\lib\net472\GlueNet.Vision.Core.dll</HintPath>
+    <Reference Include="Emgu.CV.World, Version=4.1.1.3497, Culture=neutral, PublicKeyToken=7281126722ab4438, processorArchitecture=MSIL">
+      <HintPath>..\..\..\CUSTOM\GlueNet.AiVision.Inventec.LgsVision\packages\EMGU.CV.4.1.1.3497\lib\net35\Emgu.CV.World.dll</HintPath>
+    </Reference>
+    <Reference Include="GlueNet.Vision.Core, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\CUSTOM\GlueNet.AiVision.Inventec.LgsVision\packages\GlueNet.Vision.Core.1.4.0\lib\net472\GlueNet.Vision.Core.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -152,7 +155,9 @@
     <Error Condition="!Exists('..\packages\Fody.4.2.1\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.4.2.1\build\Fody.targets'))" />
     <Error Condition="!Exists('..\packages\PropertyChanged.Fody.2.6.1\build\PropertyChanged.Fody.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\PropertyChanged.Fody.2.6.1\build\PropertyChanged.Fody.props'))" />
     <Error Condition="!Exists('..\packages\Basler.Pylon.NET.x64.7.4.0.38864\build\Basler.Pylon.NET.x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Basler.Pylon.NET.x64.7.4.0.38864\build\Basler.Pylon.NET.x64.targets'))" />
+    <Error Condition="!Exists('..\..\..\CUSTOM\GlueNet.AiVision.Inventec.LgsVision\packages\EMGU.CV.4.1.1.3497\build\EMGU.CV.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\CUSTOM\GlueNet.AiVision.Inventec.LgsVision\packages\EMGU.CV.4.1.1.3497\build\EMGU.CV.targets'))" />
   </Target>
   <Import Project="..\packages\Fody.4.2.1\build\Fody.targets" Condition="Exists('..\packages\Fody.4.2.1\build\Fody.targets')" />
   <Import Project="..\packages\Basler.Pylon.NET.x64.7.4.0.38864\build\Basler.Pylon.NET.x64.targets" Condition="Exists('..\packages\Basler.Pylon.NET.x64.7.4.0.38864\build\Basler.Pylon.NET.x64.targets')" />
+  <Import Project="..\..\..\CUSTOM\GlueNet.AiVision.Inventec.LgsVision\packages\EMGU.CV.4.1.1.3497\build\EMGU.CV.targets" Condition="Exists('..\..\..\CUSTOM\GlueNet.AiVision.Inventec.LgsVision\packages\EMGU.CV.4.1.1.3497\build\EMGU.CV.targets')" />
 </Project>
