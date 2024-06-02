@@ -93,8 +93,9 @@
     <Reference Include="Emgu.CV, Version=4.7.0.5276, Culture=neutral, PublicKeyToken=7281126722ab4438, processorArchitecture=MSIL">
       <HintPath>..\packages\Emgu.CV.4.7.0.5276\lib\netstandard2.0\Emgu.CV.dll</HintPath>
     </Reference>
-    <Reference Include="GlueNet.Vision.Core, Version=1.5.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\GlueNet.Vision.Core.1.5.0\lib\net472\GlueNet.Vision.Core.dll</HintPath>
+    <Reference Include="GlueNet.Vision.Core, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\CUSTOM\GlueNet.AiVision.Inventec.LgsVision\packages\GlueNet.Vision.Core.1.4.0\lib\net472\GlueNet.Vision.Core.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>

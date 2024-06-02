@@ -28,7 +28,7 @@ namespace GlueNet.Vision.Basler
         private PixelDataConverter myConverter = new PixelDataConverter();
 
         private bool myGrabOver = false;
-        public CameraInfo CameraInfo { get; }
+        public CameraInfo CameraInfo { get; private set; }
         public TriggerModes TriggerMode { get; set; }
         public bool IsPlaying { get; set; }
 
@@ -38,6 +38,7 @@ namespace GlueNet.Vision.Basler
 
         public void InitCamera(CameraInfo cameraInfo)
         {
+            CameraInfo = cameraInfo;
             myCamera = new Camera(cameraInfo.Raw as ICameraInfo);
 
             myCamera.CameraOpened += Configuration.AcquireContinuous;
