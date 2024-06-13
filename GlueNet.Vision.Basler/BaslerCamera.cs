@@ -48,18 +48,15 @@ namespace GlueNet.Vision.Basler
 
             myCamera.Open();
 
-            myCamera.Parameters.Load("CameraParameters.pfs", ParameterPath.CameraDevice);
+            //myCamera.Parameters.Load($"{Environment.CurrentDirectory}\\CameraParameters.pfs", ParameterPath.CameraDevice);
 
-            myCamera.Parameters[PLCamera.GevHeartbeatTimeout].SetValue(10000, IntegerValueCorrection.Nearest);
-
-            //myCamera.Parameters[PLCamera.ExposureTimeAbs].SetValue(10000);
-            
-            //myCamera.Parameters[PLCamera.TriggerMode].SetValue("On");
+            //myCamera.Parameters[PLCamera.GevHeartbeatTimeout].SetValue(10000, IntegerValueCorrection.Nearest);
 
             myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Software);
-
+            myCamera.Parameters[PLCamera.ReverseX].SetValue(true);
+            myCamera.Parameters[PLCamera.ReverseY].SetValue(true);
             Console.WriteLine($"Mode : {myCamera.Parameters[PLCamera.TriggerSource].GetValue()}");
-            Console.WriteLine($"Exp Time : {myCamera.Parameters[PLCamera.ExposureTimeRaw].GetValue()}");
+            Console.WriteLine($"Exp Time : {myCamera.Parameters[PLCamera.ExposureTime].GetValue()}");
         }
 
         private void OnGrabStopped(object sender, GrabStopEventArgs e)
@@ -94,7 +91,12 @@ namespace GlueNet.Vision.Basler
 
                     if (myGrabOver)
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        //Application.Current.Dispatcher.Invoke(() =>
+                        //{
+                        //    CaptureCompleted?.Invoke(this, new BaslerCaptureCompletedArgs(bitmap));
+                        //});
+                        
+                        Task.Run(() =>
                         {
                             CaptureCompleted?.Invoke(this, new BaslerCaptureCompletedArgs(bitmap));
                         });
@@ -153,7 +155,7 @@ namespace GlueNet.Vision.Basler
         {
             try
             {
-                myCamera.StreamGrabber.Stop();
+                myCamera?.StreamGrabber.Stop();
             }
             catch (Exception e)
             {
@@ -165,16 +167,16 @@ namespace GlueNet.Vision.Basler
         {
             try
             {
-                //TriggerMode = TriggerModes.SoftTrigger;
-                ////myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
-                //myCamera.StreamGrabber.Start(1, GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
+                TriggerMode = TriggerModes.SoftTrigger;
+                //myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
+                myCamera.StreamGrabber.Start(1, GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
 
-                //if (myCamera.WaitForFrameTriggerReady(5000, TimeoutHandling.ThrowException))
-                //{
-                //    myCamera.ExecuteSoftwareTrigger();
-                //}
+                if (myCamera.WaitForFrameTriggerReady(5000, TimeoutHandling.ThrowException))
+                {
+                    myCamera.ExecuteSoftwareTrigger();
+                }
 
-                OneShot();
+                //OneShot();
             }
             catch (Exception e)
             {
