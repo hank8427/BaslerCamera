@@ -26,9 +26,9 @@
                     <TextBlock Text="Gain"/>
                     <TextBox  Text="{Binding Gain}" Width="50" Margin="45,0,0,0" />
                 </WrapPanel>
-                <WrapPanel Margin="5" Visibility="Collapsed">
+                <WrapPanel Margin="5">
                     <TextBlock Text="Frame rate"/>
-                    <TextBox  Width="50" Margin="10,0,0,0"/>
+                    <TextBox Text="{Binding Fps}" Width="50" Margin="15,0,0,0"/>
                 </WrapPanel>
                 <StackPanel>
                     <Button Content="Get Parameters" Click="GetParmOnClick" Margin="5"/>
@@ -41,6 +41,7 @@
                 <Button Content="Capture" Click="CaptureOnClick" Margin="10"/>
                 <Button Content="Close Camera" Click="CloseCameraOnClick" Margin="10"/>
                 <Button Content="Open Camera" Click="OpenCameraOnClick" Margin="10"/>
+                <Button Content="Hardware Trigger" Click="HardwareTrigger_OnClick" Margin="10"/> 
             </StackPanel>
         </WrapPanel>
         <Border Background="LightGray">

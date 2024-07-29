@@ -35,6 +35,7 @@ namespace GlueNet.Vision.Basler.WpfApp
         public bool IsContinuous { get; set; } = false;
         public bool IsSoftTrigger { get; set; } = true;
         public float Gain { get; set; }
+        public float Fps { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
         public MainWindow()
@@ -58,7 +59,10 @@ namespace GlueNet.Vision.Basler.WpfApp
                 var bitmap = args.Bitmap;
                 if (bitmap != null)
                 {
-                    BitmapSource1 = ConvertToBitmapImage(bitmap);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        BitmapSource1 = ConvertToBitmapImage(bitmap);
+                    });
                 }
             }
         }
@@ -95,6 +99,11 @@ namespace GlueNet.Vision.Basler.WpfApp
         private void GetParmOnClick(object sender, RoutedEventArgs e)
         {
             Gain = Camera1.GetGain();
+
+            if (Camera1 is BaslerCamera camera)
+            {
+                Fps = camera.GetFps();
+            }
         }
 
         private void SetParmOnClick(object sender, RoutedEventArgs e)
@@ -133,6 +142,14 @@ namespace GlueNet.Vision.Basler.WpfApp
             {
                 Camera1 = factory.CreateCamera(cameraInfos.FirstOrDefault());
                 Camera1.CaptureCompleted += Camera_CaptureCompleted;
+            }
+        }
+
+        private void HardwareTrigger_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (Camera1 is BaslerCamera camera)
+            {
+                camera.HardwareTrigger();
             }
         }
     }
