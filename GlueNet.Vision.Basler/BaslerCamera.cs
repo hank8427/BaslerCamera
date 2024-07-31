@@ -52,32 +52,6 @@ namespace GlueNet.Vision.Basler
                 {
                     OnTriggerModeChanged();
                 }
-
-            }
-        }
-
-        private void OnTriggerModeChanged()
-        {
-            switch (TriggerMode)
-            {
-                case TriggerModes.Continues:
-                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.Off);
-                    myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.Continuous);
-                    break;
-                case TriggerModes.HardTrigger:
-                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.On);
-                    myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
-                    myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Line1);
-                    myCamera.Parameters[PLCamera.TriggerSelector].SetValue(PLCamera.TriggerSelector.FrameStart);
-                    myCamera.Parameters[PLCamera.TriggerActivation].SetValue(PLCamera.TriggerActivation.RisingEdge);
-                    break;
-                case TriggerModes.SoftTrigger:
-                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.On);
-                    myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.Continuous);
-                    myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Software);
-                    myCamera.Parameters[PLCamera.TriggerSelector].SetValue(PLCamera.TriggerSelector.FrameStart);
-                    myCamera.Parameters[PLCamera.TriggerActivation].SetValue(PLCamera.TriggerActivation.RisingEdge);
-                    break;
             }
         }
 
@@ -100,21 +74,39 @@ namespace GlueNet.Vision.Basler
 
             myCamera.Open();
 
-            if (File.Exists($"{Environment.CurrentDirectory}\\CameraParameters.pfs"))
-            {
-                myCamera.Parameters.Load($"{Environment.CurrentDirectory}\\CameraParameters.pfs", ParameterPath.CameraDevice);
-            }
+            //if (File.Exists($"{Environment.CurrentDirectory}\\CameraParameters.pfs"))
+            //{
+                //myCamera.Parameters.Load($"{Environment.CurrentDirectory}\\CameraParameters.pfs", ParameterPath.CameraDevice);
+            //}
 
             //myCamera.Parameters[PLCamera.GevHeartbeatTimeout].SetValue(10000, IntegerValueCorrection.Nearest);
-
-            //myCamera.Parameters[PLCamera.Width].SetValue(1280);
-            //myCamera.Parameters[PLCamera.Height].SetValue(960);
-
-            myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Software);
             //myCamera.Parameters[PLCamera.ReverseX].SetValue(true);
             //myCamera.Parameters[PLCamera.ReverseY].SetValue(true);
+
+            myCamera.Parameters[PLCamera.TriggerSelector].SetValue(PLCamera.TriggerSelector.FrameStart);
+            myCamera.Parameters[PLCamera.TriggerActivation].SetValue(PLCamera.TriggerActivation.RisingEdge);
+            myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.Continuous);
+            
             Console.WriteLine($"Mode : {myCamera.Parameters[PLCamera.TriggerSource].GetValue()}");
             Console.WriteLine($"Exp Time : {myCamera.Parameters[PLCamera.ExposureTime].GetValue()}");
+        }
+
+        private void OnTriggerModeChanged()
+        {
+            switch (TriggerMode)
+            {
+                case TriggerModes.Continues:
+                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.Off);
+                    break;
+                case TriggerModes.HardTrigger:
+                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.On);
+                    myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Line1);
+                    break;
+                case TriggerModes.SoftTrigger:
+                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.On);
+                    myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Software);
+                    break;
+            }
         }
 
         private void OnGrabStopped(object sender, GrabStopEventArgs e)
@@ -157,9 +149,7 @@ namespace GlueNet.Vision.Basler
 
                     IntPtr ptrBmp = bmpData.Scan0;
 
-
                     myConverter.Convert(ptrBmp, bmpData.Stride * bitmap.Height, grabResult);
-                    
 
                     bitmap.UnlockBits(bmpData);
 
