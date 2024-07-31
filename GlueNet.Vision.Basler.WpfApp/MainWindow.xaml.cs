@@ -20,6 +20,7 @@ using System.Windows.Shapes;
 using Basler.Pylon;
 using GlueNet.Vision.Core;
 using ICamera = GlueNet.Vision.Core.ICamera;
+using System.Windows.Media.Media3D;
 
 namespace GlueNet.Vision.Basler.WpfApp
 {
@@ -28,12 +29,8 @@ namespace GlueNet.Vision.Basler.WpfApp
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        public BitmapSource BitmapSource1 { get; set; }
-        public BitmapImage BitmapSource2 { get; set; }
-        public ICamera Camera1 { get; set; }
-        public ICamera Camera2 { get; set; }
-        public bool IsContinuous { get; set; } = false;
-        public bool IsSoftTrigger { get; set; } = true;
+        public BitmapSource BitmapSource { get; set; }
+        public ICamera Camera { get; set; }
         public float Gain { get; set; }
         public float Fps { get; set; }
 
@@ -45,8 +42,9 @@ namespace GlueNet.Vision.Basler.WpfApp
 
             if (cameraInfos.Count != 0)
             {
-                Camera1 = factory.CreateCamera(cameraInfos.FirstOrDefault());
-                Camera1.CaptureCompleted += Camera_CaptureCompleted;
+                Camera = factory.CreateCamera(cameraInfos.FirstOrDefault());
+                Camera.CaptureCompleted += Camera_CaptureCompleted;
+                Camera.TriggerMode = TriggerModes.Continues;
             }
 
             InitializeComponent();
@@ -61,7 +59,7 @@ namespace GlueNet.Vision.Basler.WpfApp
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        BitmapSource1 = ConvertToBitmapImage(bitmap);
+                        BitmapSource = ConvertToBitmapImage(bitmap);
                     });
                 }
             }
@@ -80,27 +78,11 @@ namespace GlueNet.Vision.Basler.WpfApp
             return image;
         }
 
-        private void ContinuousMode_Checked(object sender, RoutedEventArgs e)
-        {
-            if ( Camera1 is BaslerCamera camera)
-            {
-                camera.SetContinuousMode();
-            }
-        }
-
-        private void TriggerMode_Checked(object sender, RoutedEventArgs e)
-        {
-            if (Camera1 is BaslerCamera camera)
-            {
-                camera.SetTriggerMode();
-            }
-        }
-
         private void GetParmOnClick(object sender, RoutedEventArgs e)
         {
-            Gain = Camera1.GetGain();
+            Gain = Camera.GetGain();
 
-            if (Camera1 is BaslerCamera camera)
+            if (Camera is BaslerCamera camera)
             {
                 Fps = camera.GetFps();
             }
@@ -108,29 +90,27 @@ namespace GlueNet.Vision.Basler.WpfApp
 
         private void SetParmOnClick(object sender, RoutedEventArgs e)
         {
-            Camera1.SetGain(Gain);
+            Camera.SetGain(Gain);
         }
 
         private void StartPlayOnClick(object sender, RoutedEventArgs e)
         {
-            IsContinuous = true;
-            Camera1.StartPlay();
+            Camera.StartPlay();
         }
 
         private void StopPlayOnClick(object sender, RoutedEventArgs e)
         {
-            Camera1.StopPlay();
+            Camera.StopPlay();
         }
 
         private void CaptureOnClick(object sender, RoutedEventArgs e)
         {
-            IsSoftTrigger = true;
-            Camera1.SoftTrigger();
+            Camera.SoftTrigger();
         }
 
         private void CloseCameraOnClick(object sender, RoutedEventArgs e)
         {
-            Camera1.Dispose();
+            Camera.Dispose();
         }
 
         private void OpenCameraOnClick(object sender, RoutedEventArgs e)
@@ -140,16 +120,18 @@ namespace GlueNet.Vision.Basler.WpfApp
 
             if (cameraInfos.Count != 0)
             {
-                Camera1 = factory.CreateCamera(cameraInfos.FirstOrDefault());
-                Camera1.CaptureCompleted += Camera_CaptureCompleted;
+                Camera = factory.CreateCamera(cameraInfos.FirstOrDefault());
+                Camera.CaptureCompleted += Camera_CaptureCompleted;
             }
         }
 
-        private void HardwareTrigger_OnClick(object sender, RoutedEventArgs e)
+
+        private void ChangeTriggerMode_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (Camera1 is BaslerCamera camera)
+            if (Camera.IsPlaying)
             {
-                camera.HardwareTrigger();
+                MessageBox.Show("Camera is playing, please stop it first.");
+                e.Handled = true;
             }
         }
     }

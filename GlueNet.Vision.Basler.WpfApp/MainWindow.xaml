@@ -4,9 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GlueNet.Vision.Basler.WpfApp"
+        xmlns:core="clr-namespace:GlueNet.Vision.Core;assembly=GlueNet.Vision.Core"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
+
+    <Window.Resources>
+        <local:TriggerModeConverter x:Key="TriggerModeConverter" />
+        <local:IsPlayingConverter x:Key="IsPlayingConverter" />
+    </Window.Resources>
+
     <DockPanel>
         <WrapPanel Width="300" DockPanel.Dock="Left">
             <WrapPanel.Resources>
@@ -16,12 +23,18 @@
                 </Style>
             </WrapPanel.Resources>
             <StackPanel Width="150">
-                <RadioButton VerticalAlignment="Center" Checked="ContinuousMode_Checked" IsChecked="{Binding IsContinuous}" Content="Continuous Mode"  Margin="10"/>
-                <RadioButton VerticalAlignment="Center" Checked="TriggerMode_Checked" IsChecked="{Binding IsSoftTrigger}" Content="SoftTrigger Mode" Margin="10"/>
-                <WrapPanel Margin="5" Visibility="Collapsed">
-                    <TextBlock Text="Exposure"/>
-                    <TextBox Width="50" Margin="20,0,0,0" />
-                </WrapPanel>
+                <RadioButton VerticalAlignment="Center" PreviewMouseDown="ChangeTriggerMode_PreviewMouseDown"
+                             IsChecked="{Binding Camera.TriggerMode, Converter={StaticResource TriggerModeConverter}, ConverterParameter={x:Static core:TriggerModes.Continues}}" 
+                             Content="Continuous Mode"  Margin="10"/>
+
+                <RadioButton VerticalAlignment="Center" PreviewMouseDown="ChangeTriggerMode_PreviewMouseDown"
+                             IsChecked="{Binding Camera.TriggerMode, Converter={StaticResource TriggerModeConverter}, ConverterParameter={x:Static core:TriggerModes.SoftTrigger}}" 
+                             Content="SoftTrigger Mode" Margin="10"/>
+
+                <RadioButton VerticalAlignment="Center" PreviewMouseDown="ChangeTriggerMode_PreviewMouseDown"
+                             IsChecked="{Binding Camera.TriggerMode, Converter={StaticResource TriggerModeConverter}, ConverterParameter={x:Static core:TriggerModes.HardTrigger}}" 
+                             Content="HardTrigger Mode" Margin="10"/>
+
                 <WrapPanel Margin="10">
                     <TextBlock Text="Gain"/>
                     <TextBox  Text="{Binding Gain}" Width="50" Margin="45,0,0,0" />
@@ -36,22 +49,16 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel>
-                <Button Content="Start Play" Click="StartPlayOnClick" Margin="10" />
-                <Button Content="Stop Play" Click="StopPlayOnClick" Margin="10"/>
+                <Button Content="Start Play" Click="StartPlayOnClick" Margin="10" IsEnabled="{Binding Camera.IsPlaying, Converter={StaticResource IsPlayingConverter}}" />
+                <Button Content="Stop Play" Click="StopPlayOnClick" Margin="10" IsEnabled="{Binding Camera.IsPlaying}"/>
                 <Button Content="Capture" Click="CaptureOnClick" Margin="10"/>
                 <Button Content="Close Camera" Click="CloseCameraOnClick" Margin="10"/>
                 <Button Content="Open Camera" Click="OpenCameraOnClick" Margin="10"/>
-                <Button Content="Hardware Trigger" Click="HardwareTrigger_OnClick" Margin="10"/> 
             </StackPanel>
         </WrapPanel>
         <Border Background="LightGray">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Image Source="{Binding BitmapSource1}" Grid.Column="0"/>
-                <Image Source="{Binding BitmapSource2}" Grid.Column="1"/>
+                <Image Source="{Binding BitmapSource}" Grid.Column="0"/>
             </Grid>
         </Border>
     </DockPanel>

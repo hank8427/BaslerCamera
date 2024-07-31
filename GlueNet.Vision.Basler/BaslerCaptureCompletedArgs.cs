@@ -7,10 +7,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Basler.Pylon;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
-using Emgu.CV.Structure;
 using GlueNet.Vision.Core;
+using OpenCvSharp;
+using OpenCvSharp.Extensions;
 
 namespace GlueNet.Vision.Basler
 {
@@ -20,35 +19,28 @@ namespace GlueNet.Vision.Basler
         public object Raw { get; }
         public BaslerCaptureCompletedArgs(Bitmap bitmap)
         {
+            SetGrayscalePalette(bitmap);
             Bitmap = bitmap;
         }
 
         public Mat GetMat()
         {
-            var bitmap = (Bitmap)Bitmap.Clone();
-            var image = new Image<Bgr, byte>(bitmap);
-            var mat = image.Mat;
-            var width = Bitmap.Width;
-            var height = Bitmap.Height;
-            var isGray = false;
-            int channels = isGray ? 1 : 3;
-            int stride = isGray ? width : width * 3;
-            //return new Mat(height, width, DepthType.Cv8U, channels, ptrImageData, stride);
+            var mat = Bitmap.ToMat();
+
             return mat;
+        }
 
-            //var rect = new Rectangle(0, 0, Bitmap.Width, Bitmap.Height);
-
-            //var bmpData = Bitmap.LockBits(rect, ImageLockMode.ReadWrite, Bitmap.PixelFormat);
-
-            //IntPtr data = bmpData.Scan0;
-
-            //int step = bmpData.Stride;
-
-            //Mat mat = new Mat(Bitmap.Height, Bitmap.Width, DepthType.Cv8U, 3, data, step);
-
-            //Bitmap.UnlockBits(bmpData);
-
-            //return mat;
+        private static void SetGrayscalePalette(Bitmap bitmap)
+        {
+            if (bitmap.PixelFormat == PixelFormat.Format8bppIndexed)
+            {
+                ColorPalette palette = bitmap.Palette;
+                for (int i = 0; i < 256; i++)
+                {
+                    palette.Entries[i] = Color.FromArgb(i, i, i);
+                }
+                bitmap.Palette = palette;
+            }
         }
     }
 }

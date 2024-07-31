@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -23,6 +24,8 @@ namespace GlueNet.Vision.Basler
 {
     public class BaslerCamera : ICamera, INotifyPropertyChanged
     {
+        private TriggerModes myTriggerMode;
+
         private int myGrabFrame;
 
         private DateTime myStartTime;
@@ -36,9 +39,50 @@ namespace GlueNet.Vision.Basler
         private PixelDataConverter myConverter = new PixelDataConverter();
 
         private bool myGrabOver = false;
+
         public CameraInfo CameraInfo { get; private set; }
-        public TriggerModes TriggerMode { get; set; }
+        public TriggerModes TriggerMode
+        {
+            get { return myTriggerMode; }
+            set
+            {
+                myTriggerMode = value;
+
+                if (!IsPlaying)
+                {
+                    OnTriggerModeChanged();
+                }
+
+            }
+        }
+
+        private void OnTriggerModeChanged()
+        {
+            switch (TriggerMode)
+            {
+                case TriggerModes.Continues:
+                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.Off);
+                    myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.Continuous);
+                    break;
+                case TriggerModes.HardTrigger:
+                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.On);
+                    myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
+                    myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Line1);
+                    myCamera.Parameters[PLCamera.TriggerSelector].SetValue(PLCamera.TriggerSelector.FrameStart);
+                    myCamera.Parameters[PLCamera.TriggerActivation].SetValue(PLCamera.TriggerActivation.RisingEdge);
+                    break;
+                case TriggerModes.SoftTrigger:
+                    myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.On);
+                    myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.Continuous);
+                    myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Software);
+                    myCamera.Parameters[PLCamera.TriggerSelector].SetValue(PLCamera.TriggerSelector.FrameStart);
+                    myCamera.Parameters[PLCamera.TriggerActivation].SetValue(PLCamera.TriggerActivation.RisingEdge);
+                    break;
+            }
+        }
+
         public bool IsPlaying { get; set; }
+        public FrameInfo FrameInfo { get; }
 
         public event EventHandler<ICaptureCompletedArgs> CaptureCompleted;
 
@@ -56,12 +100,15 @@ namespace GlueNet.Vision.Basler
 
             myCamera.Open();
 
-            //myCamera.Parameters.Load($"{Environment.CurrentDirectory}\\CameraParameters.pfs", ParameterPath.CameraDevice);
+            if (File.Exists($"{Environment.CurrentDirectory}\\CameraParameters.pfs"))
+            {
+                myCamera.Parameters.Load($"{Environment.CurrentDirectory}\\CameraParameters.pfs", ParameterPath.CameraDevice);
+            }
 
             //myCamera.Parameters[PLCamera.GevHeartbeatTimeout].SetValue(10000, IntegerValueCorrection.Nearest);
 
-            myCamera.Parameters[PLCamera.Width].SetValue(1280);
-            myCamera.Parameters[PLCamera.Height].SetValue(960);
+            //myCamera.Parameters[PLCamera.Width].SetValue(1280);
+            //myCamera.Parameters[PLCamera.Height].SetValue(960);
 
             myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Software);
             //myCamera.Parameters[PLCamera.ReverseX].SetValue(true);
@@ -93,15 +140,26 @@ namespace GlueNet.Vision.Basler
 
                 if (grabResult.IsValid)
                 {
-                    Bitmap bitmap = new Bitmap(grabResult.Width, grabResult.Height, PixelFormat.Format24bppRgb);
+                    if (IsMonoData(grabResult))
+                    {
+                        pixelFormat = PixelFormat.Format8bppIndexed;
+                        myConverter.OutputPixelFormat = PixelType.Mono8;
+                    }
+                    else
+                    {
+                        pixelFormat = PixelFormat.Format24bppRgb;
+                        myConverter.OutputPixelFormat = PixelType.BayerBG8;
+                    }
+
+                    Bitmap bitmap = new Bitmap(grabResult.Width, grabResult.Height, pixelFormat);
 
                     BitmapData bmpData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadWrite, bitmap.PixelFormat);
 
-                    myConverter.OutputPixelFormat = PixelType.BGR8packed;
-
                     IntPtr ptrBmp = bmpData.Scan0;
 
+
                     myConverter.Convert(ptrBmp, bmpData.Stride * bitmap.Height, grabResult);
+                    
 
                     bitmap.UnlockBits(bmpData);
 
@@ -160,12 +218,8 @@ namespace GlueNet.Vision.Basler
         {
             try
             {
-                //TriggerMode = TriggerModes.Continues;
-                //myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
-                //myCamera.StreamGrabber.Start(GrabStrategy.LatestImages, GrabLoop.ProvidedByStreamGrabber);
-                myGrabFrame = 0;
-                myStartTime = DateTime.Now;
                 ContinuousShot();
+                IsPlaying = true;
             }
             catch (Exception e)
             {
@@ -178,31 +232,10 @@ namespace GlueNet.Vision.Basler
             try
             {
                 myCamera?.StreamGrabber.Stop();
+                IsPlaying = false;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-            }
-        }
-
-
-        public void HardwareTrigger()
-        {
-            try
-            {
-                TriggerMode = TriggerModes.HardTrigger;
-                myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
-                //myCamera.StreamGrabber.Start(1, GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
-                myCamera.Parameters[PLCamera.TriggerSource].SetValue(PLCamera.TriggerSource.Line1);
-                myCamera.Parameters[PLCamera.TriggerSelector].SetValue(PLCamera.TriggerSelector.FrameStart);
-                myCamera.Parameters[PLCamera.TriggerMode].SetValue(PLCamera.TriggerMode.On);
-                myCamera.Parameters[PLCamera.TriggerActivation].SetValue(PLCamera.TriggerActivation.RisingEdge);
-                
-                ContinuousShot();
-            }
-            catch (Exception e)
-            {
-                myCamera.StreamGrabber.Stop();
                 Console.WriteLine(e);
             }
         }
@@ -211,23 +244,11 @@ namespace GlueNet.Vision.Basler
         {
             try
             {
-                TriggerMode = TriggerModes.SoftTrigger;
-                //myCamera.Parameters[PLCamera.AcquisitionMode].SetValue(PLCamera.AcquisitionMode.SingleFrame);
-                
-                myCamera.StreamGrabber.Start(1, GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
+                //myCamera.StreamGrabber.Start(1, GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
 
                 myGrabFrame = 0;
 
-                //if (myCamera.CanWaitForFrameTriggerReady)
-                //{
-                //    myCamera.WaitForFrameTriggerReady(1000, TimeoutHandling.ThrowException);
-                //}
-
                 myCamera.ExecuteSoftwareTrigger();
-                
-
-
-                //OneShot();
             }
             catch (Exception e)
             {
@@ -242,23 +263,23 @@ namespace GlueNet.Vision.Basler
             {
                 myCamera.Parameters[PLCamera.GainAuto].TrySetValue(PLCamera.GainAuto.Off);
 
-                long min = myCamera.Parameters[PLCamera.GainRaw].GetMinimum();
-                long max = myCamera.Parameters[PLCamera.GainRaw].GetMaximum();
-                long incr = myCamera.Parameters[PLCamera.GainRaw].GetIncrement();
+                double min = myCamera.Parameters[PLCamera.Gain].GetMinimum();
+                double max = myCamera.Parameters[PLCamera.Gain].GetMaximum();
+                double? incr = myCamera.Parameters[PLCamera.Gain].GetIncrement();
                 if (gain < min)
                 {
-                    gain = min;
+                    gain = (float)min;
                 }
                 else if (gain > max)
                 {
-                    gain = max;
+                    gain = (float)max;
                 }
-                else
-                {
-                    gain = min + (((gain - min)/incr) * incr);
-                }
+                //else
+                //{
+                //    gain = (float)(min + (((gain - min)/incr) * incr));
+                //}
 
-                myCamera.Parameters[PLCamera.GainRaw].SetValue((long)gain);
+                myCamera.Parameters[PLCamera.Gain].SetValue((long)gain);
             }
             catch (Exception e)
             {
@@ -270,7 +291,7 @@ namespace GlueNet.Vision.Basler
         {
             try
             {
-                var gain = myCamera.Parameters[PLCamera.GainRaw].GetValue();
+                var gain = myCamera.Parameters[PLCamera.Gain].GetValue();
                 return (float)gain;
             }
             catch (Exception e)
@@ -294,11 +315,6 @@ namespace GlueNet.Vision.Basler
                 Console.WriteLine(e);
                 return 0;
             }
-        }
-
-        public void SetBuffer(IntPtr address)
-        {
-            throw new NotImplementedException();
         }
 
         public bool IsMonoData(IGrabResult iGrabResult)
@@ -373,16 +389,6 @@ namespace GlueNet.Vision.Basler
             return bitmap;
         }
 
-        public void SetTriggerMode()
-        {
-            TriggerMode = TriggerModes.SoftTrigger;
-        }
-
-        public void SetContinuousMode()
-        {
-            TriggerMode = TriggerModes.Continues;
-        }
-
         private void OneShot()
         {
             try
@@ -396,18 +402,25 @@ namespace GlueNet.Vision.Basler
             }
         }
 
-
         private void ContinuousShot()
         {
             try
             {
-                Configuration.AcquireContinuous(myCamera, null);
+                myGrabFrame = 0;
+                myStartTime = DateTime.Now;
+                //Configuration.AcquireContinuous(myCamera, null);
+
                 myCamera.StreamGrabber.Start(GrabStrategy.OneByOne, GrabLoop.ProvidedByStreamGrabber);
             }
             catch (Exception exception)
             {
                 MessageBox.Show(exception.ToString());
             }
+        }
+
+        public void SetBuffer(IntPtr[] address)
+        {
+            throw new NotImplementedException();
         }
     }
 }
